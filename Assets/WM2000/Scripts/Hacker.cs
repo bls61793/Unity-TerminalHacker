@@ -6,11 +6,11 @@ public class Hacker : MonoBehaviour
 {
     AudioSource Source = null;
     public AudioClip ModemConnectSound;
+    string ContactPassword = null;
 
     enum GameScreen { Login, LoadAndConnect, Menu, Password, Win }
     GameScreen screen = GameScreen.Login;
     int ContactDifficultySelection = -1;
-
 
     string UserName = "";
 
@@ -48,6 +48,11 @@ public class Hacker : MonoBehaviour
         {
             ProcessMenuInput(Input);
         }
+        if (screen == GameScreen.Password)
+        {
+            ProcessPasswordGuess(Input);
+        }
+        
 
 
     }
@@ -79,6 +84,31 @@ public class Hacker : MonoBehaviour
         else
         {
             Terminal.WriteLine("Error. Invalid Input Detected. \n Please enter one of the numbers listed above, or \"Menu\" to return to refresh \n the menu.");
+        }
+    }
+    private void ProcessPasswordGuess(string Input)
+    {
+
+        switch (ContactDifficultySelection)
+        {
+            case 1:
+                ContactPassword = "Father";
+                break;
+            case 2:
+                ContactPassword = "Scoundrel";
+                break;
+             case 3:
+                ContactPassword = "Twelve Plus One";
+                break;
+        }
+
+        if (Input == ContactPassword)
+        {
+            Terminal.WriteLine("Login Successful!");
+        }
+        else
+        {
+            Terminal.WriteLine("Password Entered Was Incorrect. Please try again.");
         }
     }
 
