@@ -10,6 +10,9 @@ public class Hacker : MonoBehaviour
     string ContactName = null;
     string ContactPassword = null;
 
+    string[] EasyPasswords = { };
+    string[] MediumPasswords = { };
+    string[] HardPasswords = { };
     enum GameScreen { Login, LoadAndConnect, Menu, Password, Win }
     GameScreen screen = GameScreen.Login;
 
