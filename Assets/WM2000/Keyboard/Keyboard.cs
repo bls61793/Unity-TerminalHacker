@@ -5,9 +5,13 @@ using UnityEngine.Assertions;
 public class Keyboard : MonoBehaviour
 {
     [SerializeField] AudioClip[] keyStrokeSounds;
-    [SerializeField] Terminal connectedToTerminal;
+    [SerializeField] public Terminal connectedToTerminal;
 
     AudioSource audioSource;
+
+   private bool pauseControls = false;
+
+    public bool PauseControls { get => pauseControls; set => pauseControls = value; }
 
     private void Start()
     {
@@ -27,6 +31,11 @@ public class Keyboard : MonoBehaviour
 
     private void Update()
     {
+        if (PauseControls)
+        {
+            return; //Don't process any Input
+        }
+
         bool isValidKey = Input.inputString.Length > 0;
         if (isValidKey)
         {
@@ -38,7 +47,7 @@ public class Keyboard : MonoBehaviour
         }
     }
 
-    private void PlayRandomSound()
+    public void PlayRandomSound()
     {
         int randomIndex = UnityEngine.Random.Range(0, keyStrokeSounds.Length);
         audioSource.clip = keyStrokeSounds[randomIndex];
