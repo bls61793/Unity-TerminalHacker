@@ -5,7 +5,7 @@ using UnityEngine;
 
 enum GameScreen
 {
-    Login, LoadAndConnect, Menu, Password, Win
+    Login, LoadAndConnect, Menu, Password, Correct, Win
 }
 
 public class Hacker : MonoBehaviour
@@ -97,7 +97,7 @@ public class Hacker : MonoBehaviour
                 GameKeyboard.PlayRandomSound();
                 GameKeyboard.connectedToTerminal.ReceiveFrameInput(BugCommand.Substring(TempIndex, 1));
                 TempIndex++;
-                yield return new WaitForSeconds(0.08f);
+                yield return new WaitForSeconds(0.18f);
             }
             print("BugInstalled For Contact Index: " + ActiveContactIndex);
             bugInstalled[ActiveContactIndex] = true;
@@ -161,6 +161,10 @@ public class Hacker : MonoBehaviour
         {
             ProcessPasswordGuess(Input);
         }
+        else if (screen == GameScreen.Correct)
+        {
+            ProcessBugInput(Input);
+        }
         else if (screen == GameScreen.Win)
         {
             ProcessWinInput(Input);
@@ -219,6 +223,7 @@ public class Hacker : MonoBehaviour
             || Input.Equals("logoff", StringComparison.OrdinalIgnoreCase)
             || Input.Equals("shutdown", StringComparison.OrdinalIgnoreCase))
         {
+            Terminal.ClearScreen();
             Application.Quit();
         }
         else
@@ -304,17 +309,30 @@ public class Hacker : MonoBehaviour
         }
     }
 
-    private void ProcessWinInput(string Input)
+    private void ProcessBugInput(string Input)
     {
         if ((Input.Trim().Equals("\\ESCAPE", StringComparison.OrdinalIgnoreCase)))
         {
             screen = GameScreen.Menu;
             WriteMainMenu();
         }
-        DrawWinScreen(Input);
+        else if (Input.Equals("quit", StringComparison.OrdinalIgnoreCase) || Input.Equals("logoff", StringComparison.OrdinalIgnoreCase))
+        {
+            Terminal.ClearScreen();
+            Application.Quit();
+        }
+        BugInjectionSequence(Input);
     }
 
-    private void DrawWinScreen(string Input)
+    private void ProcessWinInput(string Input)
+    {
+        if (Input.Equals("quit", StringComparison.OrdinalIgnoreCase) || Input.Equals("logoff", StringComparison.OrdinalIgnoreCase))
+        {
+            Terminal.ClearScreen();
+            Application.Quit();
+        }
+    }
+    private void BugInjectionSequence(string Input)
     {
         if (!isSequencePlaying)
         {
@@ -343,10 +361,56 @@ public class Hacker : MonoBehaviour
             LoadContacts();
             isFirstTime = false;
         }
-        Terminal.ClearScreen();
-        Terminal.WriteLine("Hello " + UserName);
 
-        WriteContactList();
+        if (CheckWinCondition())
+        {
+            DrawWinScreen();
+        }
+        else
+        {
+            Terminal.ClearScreen();
+            Terminal.WriteLine("Hello " + UserName);
+            WriteContactList();
+        }
+    }
+
+    private void DrawWinScreen()
+    {
+        screen = GameScreen.Win;
+        Terminal.ClearScreen();
+        Terminal.WriteLine(@"
+
+░░░░░▄▄▄▄▀▀▀▀▀▀▀▀▄▄▄▄▄▄░░░░░░░ 
+░░░░░█░░░░▒▒▒▒▒▒▒▒▒▒▒▒░░▀▀▄░░░░ 
+░░░░█░░░▒▒▒▒▒▒░░░░░░░░▒▒▒░░█░░░ 
+░░░█░░░░░░▄██▀▄▄░░░░░▄▄▄░░░░█░░ 
+░▄▀▒▄▄▄▒░█▀▀▀▀▄▄█░░░██▄▄█░░░░█░ 
+█░▒█▒▄░▀▄▄▄▀░░░░░░░░█░░░▒▒▒▒▒░█
+█░▒█░█▀▄▄░░░░░█▀░░░░▀▄░░▄▀▀▀▄▒█ 
+░█░▀▄░█▄░█▀▄▄░▀░▀▀░▄▄▀░░░░█░░█░ 
+░░█░░░▀▄▀█▄▄░█▀▀▀▄▄▄▄▀▀█▀██░█░░ 
+░░░█░░░░██░░▀█▄▄▄█▄▄█▄████░█░░░ 
+░░░░█░░░░▀▀▄░█░░░█░█▀██████░█░░ 
+░░░░░▀▄░░░░░▀▀▄▄▄█▄█▄█▄█▄▀░░█░░ 
+░░░░░░░▀▄▄░▒▒▒▒░░░░░░░░░░▒░░░█░ 
+░░░░░░░░░░▀▀▄▄░▒▒▒▒▒▒▒▒▒▒░░░░█░ 
+░░░░░░░░░░░░░░▀▄▄▄▄▄░░░░░░░░█░░");
+
+        Terminal.WriteLine("Congratulations. You have PWN'd all your friends!");
+        Terminal.WriteLine("Type QUIT or LOGOFF, to clear cache and terminate the program.");
+    }
+
+    private bool CheckWinCondition()
+    {
+        for (int i = 1; i < bugInstalled.Length; i++)
+        {
+            print("INDEX: " + i);
+            if (bugInstalled[i] == false)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void LoadContacts()
@@ -364,7 +428,7 @@ public class Hacker : MonoBehaviour
 
     private void WriteContactList()
     {
-        Terminal.WriteLine("TrollEngine Found "+ContactNames.Length+" Contacts.");
+        Terminal.WriteLine("TrollEngine Found "+(ContactNames.Length - 1)+" Contacts.");
         Terminal.WriteLine("Which contact do you wish to hack?");
         for (int i = 1; i < ContactNames.Length; i++)
         {
@@ -401,7 +465,7 @@ public class Hacker : MonoBehaviour
         {
             Terminal.WriteLine("*TROLLENGINE: Connected to host. Type \\ESCAPE to return to contact selection*");
             WriteHostline("Hello " + ContactNames[ActiveContactIndex] + ". Welcome Home!");
-            screen = GameScreen.Win;
+            screen = GameScreen.Correct;
             GameKeyboard.connectedToTerminal.ReceiveFrameInput("\n");
         }
         else
@@ -409,6 +473,7 @@ public class Hacker : MonoBehaviour
             Terminal.WriteLine("*TROLLENGINE: Connected to host. \n\t Type \\ESCAPE to return to contact selection*");
             WriteHostline("Password Entered Was Incorrect. Please Check Your Input and Try Again.");
             WriteHostline("HINT: " + PassHint);
+            Terminal.WriteLine("*TROLLENGINE: LEAKED PASSWORD INFORMATION: " + ContactPasswords[ActiveContactIndex].Anagram() + " *");
         }
         
     }
